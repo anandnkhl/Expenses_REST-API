@@ -4,9 +4,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"google.golang.org/genproto/googleapis/type/date"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Expense struct{
@@ -14,9 +14,11 @@ type Expense struct{
 	Description 	string 		`json:"description"`
 	Type 			string 		`json:"type"`
 	Amount 			float64 	`json:"amount"`
-	CreatedOn 		date.Date 	`json:"created_on"`
-	UpdatedOn 		date.Date 	`json:"updated_on"`
+	CreatedOn 		time.Time 	`json:"created_on"`
+	UpdatedOn 		time.Time 	`json:"updated_on"`
 }
+
+type Expenses []Expense
 
 type ExpenseRequest struct{
 	*Expense
@@ -26,8 +28,13 @@ type ExpenseResponse struct{
 	*Expense
 }
 
+type ExpensesResponse struct {
+	*Expenses
+}
+
+
 var expense Expense
-//type Expenses []Expense
+var expenses Expenses
 
 func main() {
 	r := chi.NewRouter()
@@ -39,7 +46,7 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Route("/expenses", func(r chi.Router) {
-		//r.Get("/", ListExpenses)
+		r.Get("/", ListExpenses)
 		r.Post("/", CreateExpense)
 
 		//r.Route("/{articleID}", func(r chi.Router) {
@@ -53,6 +60,19 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
+func ListExpenses(writer http.ResponseWriter, request *http.Request) {
+	_=render.Render(writer, request, AllExpensesResponse(&expenses))
+}
+
+
+func (ExpensesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func AllExpensesResponse(exp *Expenses) *ExpensesResponse {
+	resp := &ExpensesResponse{Expenses: exp}
+	return resp
+}
 
 
 func CreateExpense(writer http.ResponseWriter, request *http.Request) {
@@ -64,12 +84,13 @@ func CreateExpense(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	expense = *data.Expense
-
-	_ = render.Render(writer, request, NewExpenseResponse(&expenses))
+	expense.Id = len(expenses) + 1
+	expense.CreatedOn = time.Now()
+	expense.UpdatedOn = time.Now()
+	expenses = append(expenses, expense)
+	_ = render.Render(writer, request, NewExpenseResponse(&expense))
 
 }
-
-
 
 func NewExpenseResponse(expense *Expense) *ExpenseResponse {
 	resp := &ExpenseResponse{Expense: expense}
