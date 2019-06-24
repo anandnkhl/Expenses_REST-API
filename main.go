@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -62,7 +61,22 @@ func main() {
 }
 
 func UpdateExpense(writer http.ResponseWriter, request *http.Request) {
+	var data ExpenseRequest
+	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
+	for index,exp := range expenses{
+		if exp.Id == ID{
+			idTemp := expenses[index].Id
+			createdOnTemp := expenses[index].CreatedOn
 
+			_ = render.Bind(request, &data)
+
+			expenses[index] = *data.Expense
+			expenses[index].UpdatedOn = time.Now()
+			expenses[index].CreatedOn = createdOnTemp
+			expenses[index].Id = idTemp
+			return
+		}
+	}
 }
 
 func DeleteExpense(writer http.ResponseWriter, request *http.Request) {
@@ -71,9 +85,6 @@ func DeleteExpense(writer http.ResponseWriter, request *http.Request) {
 	for index,exp := range expenses{
 		if exp.Id == ID{
 			expenses = append(expenses[:index], expenses[index + 1 :]... )
-			return
-		} else {
-			_,_ = fmt.Fprint(writer, "Enter valid ID (ID doesn't exist");
 			return
 		}
 	}
@@ -86,10 +97,7 @@ func ListOneExpense(writer http.ResponseWriter, request *http.Request) {
 		if exp.Id == ID{
 			_ = render.Render(writer, request, NewExpenseResponse(&exp))
 			return
-		} else{
-			_,_ = fmt.Fprintf(writer,"Enter valid ID (ID Doesn't exist)")
 		}
-
 	}
 }
 
