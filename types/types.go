@@ -15,10 +15,6 @@ type Expense struct{
 
 type Expenses []Expense
 
-type ExpenseRequest struct{
-	*Expense
-}
-
 
 
 
