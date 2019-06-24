@@ -54,12 +54,26 @@ func main() {
 			//r.Use(ExpenseCtx)
 			r.Get("/", ListOneExpense)
 		//	r.Put("/", UpdateExpense)
-		//	r.Delete("/", DeleteExpense)
+			r.Delete("/", DeleteExpense)
 		})
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
+
+func DeleteExpense(writer http.ResponseWriter, request *http.Request) {
+	var err error
+	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
+	for index,exp := range expenses{
+		if exp.Id == ID{
+			expenses = append(expenses[:index], expenses[index + 1 :]... )
+			return
+		} else {
+			_ = render.Render(writer, request, ErrInvalidRequest(err))
+		}
+	}
+}
+
 
 func ListOneExpense(writer http.ResponseWriter, request *http.Request) {
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
