@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Expenses_REST-API/types"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -10,32 +11,11 @@ import (
 	"time"
 )
 
-type Expense struct{
-	Id 				int 		`json:"id"`
-	Description 	string 		`json:"description"`
-	Type 			string 		`json:"type"`
-	Amount 			float64 	`json:"amount"`
-	CreatedOn 		time.Time 	`json:"created_on"`
-	UpdatedOn 		time.Time 	`json:"updated_on"`
-}
-
-type Expenses []Expense
-
-type ExpenseRequest struct{
-	*Expense
-}
-
-type ExpenseResponse struct{
-	*Expense
-}
-
-type ExpensesResponse struct {
-	*Expenses
-}
 
 
-var expense Expense
-var expenses Expenses
+
+var expense types.Expense
+var expenses types.Expenses
 
 func main() {
 	r := chi.NewRouter()
@@ -61,7 +41,7 @@ func main() {
 }
 
 func UpdateExpense(writer http.ResponseWriter, request *http.Request) {
-	var data ExpenseRequest
+	var data CreateExpenseRequest
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
 	for index,exp := range expenses{
 		if exp.Id == ID{
@@ -105,19 +85,22 @@ func ListExpenses(writer http.ResponseWriter, request *http.Request) {
 	_=render.Render(writer, request, AllExpensesResponse(&expenses))
 }
 
+type ExpensesResponse struct {
+	*types.Expenses
+}
 
 func (ExpensesResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func AllExpensesResponse(exp *Expenses) *ExpensesResponse {
+func AllExpensesResponse(exp *types.Expenses) *ExpensesResponse {
 	resp := &ExpensesResponse{Expenses: exp}
 	return resp
 }
 
 
 func CreateExpense(writer http.ResponseWriter, request *http.Request) {
-	data := &ExpenseRequest{}
+	data := &CreateExpenseRequest{}
 	err := render.Bind(request, data)
 	if err != nil {
 		_ = render.Render(writer, request, ErrInvalidRequest(err))
@@ -133,13 +116,20 @@ func CreateExpense(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func NewExpenseResponse(expense *Expense) *ExpenseResponse {
+type ExpenseResponse struct{
+	*types.Expense
+}
+
+func NewExpenseResponse(expense *types.Expense) *ExpenseResponse {
 	resp := &ExpenseResponse{Expense: expense}
 	return resp
 }
 
+type CreateExpenseRequest struct{
+	*types.Expense
+}
 
-func (Expense) Bind(request *http.Request) error {
+func (CreateExpenseRequest) Bind(request *http.Request) error {
 	return nil
 }
 
