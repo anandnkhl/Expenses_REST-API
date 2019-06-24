@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -49,15 +50,25 @@ func main() {
 		r.Get("/", ListExpenses)
 		r.Post("/", CreateExpense)
 
-		//r.Route("/{articleID}", func(r chi.Router) {
-		//	r.Use(ArticleCtx)
-		//	r.Get("/", ListOneExpense)
+		r.Route("/{ID}", func(r chi.Router) {
+			//r.Use(ExpenseCtx)
+			r.Get("/", ListOneExpense)
 		//	r.Put("/", UpdateExpense)
 		//	r.Delete("/", DeleteExpense)
-		//})
+		})
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+func ListOneExpense(writer http.ResponseWriter, request *http.Request) {
+	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
+	for _,exp := range expenses{
+		if exp.Id == ID{
+			_ = render.Render(writer, request, NewExpenseResponse(&exp))
+			return
+		}
+	}
 }
 
 func ListExpenses(writer http.ResponseWriter, request *http.Request) {
