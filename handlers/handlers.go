@@ -1,22 +1,25 @@
 package handlers
 
 import (
-	"Expenses_REST-API/expenseDB"
 	"Expenses_REST-API/types"
 	"context"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"strconv"
 	"time"
 )
+type MongoDB struct{
+	Db *mongo.Collection
+}
 var expense types.Expense
 var expenses types.Expenses
 
-func CreateExpense(writer http.ResponseWriter, request *http.Request) {
+func (mongo *MongoDB)CreateExpense(writer http.ResponseWriter, request *http.Request) {
 	ctx,_ := context.WithTimeout(context.Background(), 15*time.Second)
-	currID, _ := expenseDB.ExpCollFunc().Find(ctx, bson.D{})
+	currID, _ := mongo.Db.Find(ctx, bson.D{})
 	counter := 0
 	for currID.Next(ctx) {
 		counter++
@@ -37,55 +40,58 @@ func CreateExpense(writer http.ResponseWriter, request *http.Request) {
 	expenses = append(expenses, expense)
 
 	//ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
-	_, _ = expenseDB.ExpCollFunc().InsertOne(ctx, expense)
+	_, _ = mongo.Db.InsertOne(ctx, expense)
 	_ = render.Render(writer, request, NewExpenseResponse(&expense))
 }
 
-func DeleteExpense(writer http.ResponseWriter, request *http.Request) {
+func (mongo *MongoDB)DeleteExpense(writer http.ResponseWriter, request *http.Request) {
 
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
 
 	filter := bson.D{{"id", ID}}
 	ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
-	expenseDB.ExpCollFunc().FindOneAndDelete(ctx, filter)
+	mongo.Db.FindOneAndDelete(ctx, filter)
 }
 
 
-func UpdateExpense(writer http.ResponseWriter, request *http.Request) {
+func (mongo *MongoDB)UpdateExpense(writer http.ResponseWriter, request *http.Request) {
 	var data CreateExpenseRequest
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
+	ctx := context.TODO()
+	curr:= mongo.Db.FindOne(ctx, bson.D{{"id", ID}})
+	_ = curr.Decode(&data)
 
-	for index,exp := range expenses{
-		if exp.Id == ID{
-			idTemp := expenses[index].Id
-			createdOnTemp := expenses[index].CreatedOn
+	_ = render.Bind(request, &data)
 
-			_ = render.Bind(request, &data)
-				data.UpdatedOn =time.Now().String()
-			expenses[index] = *data.Expense
-			expenses[index].CreatedOn = createdOnTemp
-			expenses[index].Id = idTemp
-			return
-		}
+	update := bson.D{
+		{"$set", bson.D{{"id",ID}}},
+		{"$set", bson.D{{"description", data.Description}}},
+		{"$set", bson.D{{"type", data.Type}}},
+		{"$set", bson.D{{"amount", data.Amount}}},
+		{"$set", bson.D{{"updated_on", time.Now().String()}}},
 	}
+
+	_, _ = mongo.Db.UpdateOne(ctx, bson.D{{"id", ID}}, update,)
+
 }
 
 
-func ListOneExpense(writer http.ResponseWriter, request *http.Request) {
+func (mongo *MongoDB)GetId(writer http.ResponseWriter, request *http.Request) {
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
 	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
-	curr:= expenseDB.ExpCollFunc().FindOne(ctx, bson.D{{"id", ID}})
+	curr:= mongo.Db.FindOne(ctx, bson.D{{"id", ID}})
 	_ = curr.Decode(&expense)
 	_=render.Render(writer, request, NewExpenseResponse(&expense))
 }
 
-func ListExpenses(writer http.ResponseWriter, request *http.Request) {
+func (mongo *MongoDB)GetAll(writer http.ResponseWriter, request *http.Request) {
 	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
-	curr,_ := expenseDB.ExpCollFunc().Find(ctx, bson.D{})
+	curr,_ := mongo.Db.Find(ctx, bson.D{})
 	for curr.Next(ctx){
 		_ = curr.Decode(&expense)
-		_=render.Render(writer, request, NewExpenseResponse(&expense))
+		expenses = append(expenses, expense)
 	}
+	_=render.Render(writer, request, AllExpensesResponse(&expenses))
 
 }
 
