@@ -15,6 +15,14 @@ var expense types.Expense
 var expenses types.Expenses
 
 func CreateExpense(writer http.ResponseWriter, request *http.Request) {
+	ctx,_ := context.WithTimeout(context.Background(), 15*time.Second)
+	currID, _ := expenseDB.ExpCollFunc().Find(ctx, bson.D{})
+	counter := 0
+	for currID.Next(ctx) {
+		counter++
+	}
+
+
 	data := &CreateExpenseRequest{}
 	err := render.Bind(request, data)
 	if err != nil {
@@ -23,12 +31,12 @@ func CreateExpense(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	expense = *data.Expense
-	expense.Id = len(expenses) + 1
+	expense.Id = counter + 1
 	expense.CreatedOn = time.Now().String()
 	expense.UpdatedOn = time.Now().String()
 	expenses = append(expenses, expense)
 
-	ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
+	//ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
 	_, _ = expenseDB.ExpCollFunc().InsertOne(ctx, expense)
 	_ = render.Render(writer, request, NewExpenseResponse(&expense))
 }
@@ -53,9 +61,8 @@ func UpdateExpense(writer http.ResponseWriter, request *http.Request) {
 			createdOnTemp := expenses[index].CreatedOn
 
 			_ = render.Bind(request, &data)
-
+				data.UpdatedOn =time.Now().String()
 			expenses[index] = *data.Expense
-			expenses[index].UpdatedOn = time.Now().String()
 			expenses[index].CreatedOn = createdOnTemp
 			expenses[index].Id = idTemp
 			return
@@ -66,16 +73,20 @@ func UpdateExpense(writer http.ResponseWriter, request *http.Request) {
 
 func ListOneExpense(writer http.ResponseWriter, request *http.Request) {
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
-	for _,exp := range expenses{
-		if exp.Id == ID{
-			_ = render.Render(writer, request, NewExpenseResponse(&exp))
-			return
-		}
-	}
+	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
+	curr:= expenseDB.ExpCollFunc().FindOne(ctx, bson.D{{"id", ID}})
+	_ = curr.Decode(&expense)
+	_=render.Render(writer, request, NewExpenseResponse(&expense))
 }
 
 func ListExpenses(writer http.ResponseWriter, request *http.Request) {
-	_=render.Render(writer, request, AllExpensesResponse(&expenses))
+	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
+	curr,_ := expenseDB.ExpCollFunc().Find(ctx, bson.D{})
+	for curr.Next(ctx){
+		_ = curr.Decode(&expense)
+		_=render.Render(writer, request, NewExpenseResponse(&expense))
+	}
+
 }
 
 type ExpensesResponse struct {
