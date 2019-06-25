@@ -14,17 +14,13 @@ import (
 type MongoDB struct{
 	Db *mongo.Collection
 }
-var expense types.Expense
-var expenses types.Expenses
 
 func (mongo *MongoDB)CreateExpense(writer http.ResponseWriter, request *http.Request) {
-	ctx,_ := context.WithTimeout(context.Background(), 15*time.Second)
-	currID, _ := mongo.Db.Find(ctx, bson.D{})
-	counter := 0
-	for currID.Next(ctx) {
-		counter++
-	}
 
+	timeIDString := time.Now().String()
+	timeIDString = timeIDString[:4]+timeIDString[5:7]+timeIDString[8:10]+timeIDString[11:13]+
+		timeIDString[14:16]+timeIDString[17:19]+timeIDString[21:23]
+	timeIDInt,_ := strconv.Atoi(timeIDString)
 
 	data := &CreateExpenseRequest{}
 	err := render.Bind(request, data)
@@ -33,14 +29,14 @@ func (mongo *MongoDB)CreateExpense(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	expense = *data.Expense
-	expense.Id = counter + 1
+	expense := *data.Expense
+	expense.Id = timeIDInt
 	expense.CreatedOn = time.Now().String()
 	expense.UpdatedOn = time.Now().String()
-	expenses = append(expenses, expense)
 
-	//ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx,_ := context.WithTimeout(context.Background(), 15*time.Second)
 	_, _ = mongo.Db.InsertOne(ctx, expense)
+
 	_ = render.Render(writer, request, NewExpenseResponse(&expense))
 }
 
@@ -80,6 +76,7 @@ func (mongo *MongoDB)GetId(writer http.ResponseWriter, request *http.Request) {
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
 	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
 	curr:= mongo.Db.FindOne(ctx, bson.D{{"id", ID}})
+	var expense types.Expense
 	_ = curr.Decode(&expense)
 	_=render.Render(writer, request, NewExpenseResponse(&expense))
 }
@@ -87,7 +84,9 @@ func (mongo *MongoDB)GetId(writer http.ResponseWriter, request *http.Request) {
 func (mongo *MongoDB)GetAll(writer http.ResponseWriter, request *http.Request) {
 	ctx,_ := context.WithTimeout(context.Background(), 10*time.Second)
 	curr,_ := mongo.Db.Find(ctx, bson.D{})
+	var expenses types.Expenses
 	for curr.Next(ctx){
+		var expense types.Expense
 		_ = curr.Decode(&expense)
 		expenses = append(expenses, expense)
 	}
