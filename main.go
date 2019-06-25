@@ -1,6 +1,8 @@
 package main
 
 import (
+	"Expenses_REST-API/Interfaces"
+	"Expenses_REST-API/expenseDB"
 	"Expenses_REST-API/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -10,7 +12,10 @@ import (
 )
 
 
-func main() {
+
+
+
+func handleRequests(db Interfaces.Database){
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -20,17 +25,22 @@ func main() {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Route("/expenses", func(r chi.Router) {
-		r.Get("/", handlers.ListExpenses)
-		r.Post("/", handlers.CreateExpense)
+		r.Get("/", db.GetAll)
+		r.Post("/", db.CreateExpense)
 
 		r.Route("/{ID}", func(r chi.Router) {
-			r.Get("/", handlers.ListOneExpense)
-			r.Put("/", handlers.UpdateExpense)
-			r.Delete("/", handlers.DeleteExpense)
+			r.Get("/", db.GetId)
+			r.Put("/", db.UpdateExpense)
+			r.Delete("/", db.DeleteExpense)
 		})
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+func main() {
+	mongodb :=  &handlers.MongoDB{Db: expenseDB.ExpCollFunc()}
+	handleRequests(mongodb)
 }
 
 
