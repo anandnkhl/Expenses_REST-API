@@ -11,10 +11,6 @@ import (
 	"net/http"
 )
 
-
-
-
-
 func handleRequests(db Interfaces.Database){
 	r := chi.NewRouter()
 
