@@ -15,41 +15,6 @@ type MongoDB struct{
 	Db *mongo.Collection
 }
 
-func (mongo *MongoDB)CreateExpense(writer http.ResponseWriter, request *http.Request) {
-
-	timeIDString := time.Now().String()
-	timeIDString = timeIDString[:4]+timeIDString[5:7]+timeIDString[8:10]+timeIDString[11:13]+
-		timeIDString[14:16]+timeIDString[17:19]+timeIDString[21:23]
-	timeIDInt,_ := strconv.Atoi(timeIDString)
-
-	data := &CreateExpenseRequest{}
-	err := render.Bind(request, data)
-	if err != nil {
-		_ = render.Render(writer, request, ErrInvalidRequest(err))
-		return
-	}
-
-	expense := *data.Expense
-	expense.Id = timeIDInt
-	expense.CreatedOn = time.Now().String()
-	expense.UpdatedOn = time.Now().String()
-
-	ctx,_ := context.WithTimeout(context.Background(), 15*time.Second)
-	_, _ = mongo.Db.InsertOne(ctx, expense)
-
-	_ = render.Render(writer, request, NewExpenseResponse(&expense))
-}
-
-func (mongo *MongoDB)DeleteExpense(writer http.ResponseWriter, request *http.Request) {
-
-	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
-
-	filter := bson.D{{"id", ID}}
-	ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
-	mongo.Db.FindOneAndDelete(ctx, filter)
-}
-
-
 func (mongo *MongoDB)UpdateExpense(writer http.ResponseWriter, request *http.Request) {
 	var data CreateExpenseRequest
 	ID, _ := strconv.Atoi(chi.URLParam(request, "ID"))
