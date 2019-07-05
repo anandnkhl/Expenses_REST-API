@@ -1,0 +1,5 @@
+package handlers
+
+func ( {{ .dbObj }} *{{ .dbType}} ) {{ .operation}}Expense (writer http.ResponseWriter, request *http.Request){
+
+}
