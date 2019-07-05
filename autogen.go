@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 type MetaData struct{
@@ -14,10 +16,25 @@ type MetaData struct{
 }
 
 func main(){
+
+	var dbType string
+	var dbObj string
+	var operation string
+
+	flag.StringVar(&dbType, "dbtype", "", "enter type of database")
+	flag.StringVar(&operation, "op", "", "Enter the CRUD operation")
+	flag.Parse()
+
+	if dbType == "" || operation == "" {
+		log.Fatal("dbtype/op cannot be nil")
+	}
+
+	dbObj = strings.ToLower(dbType)[:1]
+
 	metadata := MetaData{
-		DbObj: "mongo",
-		DbType: "MongoDB",
-		Operation: "default",
+		DbObj: dbObj,
+		DbType: dbType,
+		Operation: operation,
 	}
 	file,err := os.Create("./handlers/"+metadata.Operation+"Handler.go")
 	if err != nil {
