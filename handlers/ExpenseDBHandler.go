@@ -1,4 +1,4 @@
-package expenseDB
+package handlers
 
 import (
 	"context"
@@ -7,7 +7,11 @@ import (
 	"log"
 )
 
-func ExpCollFunc() *mongo.Collection{
+type MongoDB struct{
+	Db *mongo.Collection
+}
+
+func ExpGetCollection() *mongo.Collection{
 	// Set client options
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	// Connect to MongoDB
@@ -15,9 +19,7 @@ func ExpCollFunc() *mongo.Collection{
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defaultdata := &types.Expense{2, "hitapi", "one", 150, "2019-06-24T17:39:53.51804651+05:30", "2019-06-24T17:39:53.518046732+05:30"}
 	collection := client.Database("ExpDB").Collection("ExpColl")
-	//_, _ = collection.InsertOne(ctx, defaultdata)
 	return collection
 }
 

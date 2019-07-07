@@ -2,7 +2,6 @@ package main
 
 import (
 	"Expenses_REST-API/Interfaces"
-	"Expenses_REST-API/expenseDB"
 	"Expenses_REST-API/handlers"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -35,9 +34,6 @@ func handleRequests(db Interfaces.Database){
 }
 
 func main() {
-	mongodb :=  &handlers.MongoDB{Db: expenseDB.ExpCollFunc()}
+	mongodb :=  &handlers.MongoDB{Db: handlers.ExpGetCollection()}
 	handleRequests(mongodb)
 }
-
-
-

@@ -3,12 +3,8 @@ package handlers
 import (
 	"Expenses_REST-API/types"
 	"github.com/go-chi/render"
-	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 )
-type MongoDB struct{
-	Db *mongo.Collection
-}
 
 type ExpensesResponse struct {
 	*types.Expenses

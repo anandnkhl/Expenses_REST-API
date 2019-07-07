@@ -28,5 +28,4 @@ func (mongo *MongoDB)UpdateExpense(writer http.ResponseWriter, request *http.Req
 	}
 
 	_, _ = mongo.Db.UpdateOne(ctx, bson.D{{"id", ID}}, update,)
-
 }
