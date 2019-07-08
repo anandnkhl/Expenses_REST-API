@@ -9,7 +9,7 @@ import (
     "time"
 )
 
-func ( m *MongoDB ) ListAllExpense (writer http.ResponseWriter, request *http.Request){
+func ( m *MongoDB ) GetAll (writer http.ResponseWriter, request *http.Request){
     ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
     curr,_ := m.Db.Find(ctx, bson.D{})
     var expenses types.Expenses
