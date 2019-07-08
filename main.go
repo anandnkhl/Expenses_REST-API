@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func handleRequests(db Interfaces.Database){
+func handleRequests (db Interfaces.Database){
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)

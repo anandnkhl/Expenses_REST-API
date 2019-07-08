@@ -36,12 +36,12 @@ func main(){
 		DbType: dbType,
 		Operation: operation,
 	}
-	file,err := os.Create("./handlers/"+metadata.Operation+"Handler.go")
+	file,err := os.Create("./"+metadata.Operation+"Handler.go")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	templFile, err := ioutil.ReadFile("./templates/HandlerTempl.gotpl")
+	templFile, err := ioutil.ReadFile("../templates/HandlerTempl.gotpl")
 	tpl,err := template.New("template").Parse(string(templFile))
 	if err != nil {
 		log.Fatal(err)
