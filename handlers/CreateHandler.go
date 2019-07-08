@@ -1,6 +1,12 @@
 package handlers
 
-func ( {{ .DbObj }} *{{ .DbType}} ) {{ .Operation}}Expense (writer http.ResponseWriter, request *http.Request){
+import (
+    "context"
+    "net/http"
+    "time"
+)
+
+func ( m *MongoDB ) CreateExpense (writer http.ResponseWriter, request *http.Request){
     ctx,_ := context.WithTimeout(context.Background(), 5*time.Second)
 
     //TODO implement the renderer
