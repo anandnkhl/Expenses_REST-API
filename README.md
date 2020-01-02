@@ -13,3 +13,7 @@ Compile the file main.go to start the server at port 8080 [change port no. (if r
 ```bash
 $ go run main.go
 ```
+Make sure the Mongo service is active before running the main.
+```bash
+$ sudo service mongod start
+```
